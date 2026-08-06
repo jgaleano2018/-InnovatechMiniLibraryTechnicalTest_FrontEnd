@@ -4,9 +4,8 @@ import { useParams } from "next/navigation";
 
 import BookForm from "@/presentation/components/books/BookForm";
 
-import { useBook } from "@/presentation/hooks/useBook";
-
 import { useUpdateBook } from "@/presentation/hooks/useUpdateBook";
+import { useBook } from "@/presentation/hooks/useBook";
 
 export default function EditBookPage(){
 

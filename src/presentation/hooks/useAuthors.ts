@@ -1,29 +1,13 @@
 "use client";
 
-import { useQuery }
+import { useQuery } from "@tanstack/react-query";
+// Cambiamos AuthorRepository por AuthRepository en la ruta y en la importación:
+import { AuthRepository } from "@/infrastructure/repositories/AuthRepository";
 
-from "@tanstack/react-query";
-
-import {
-
-AuthorRepository
-
-}
-
-from "@/infrastructure/repositories/AuthorRepository";
-
-export function useAuthors(){
-
-    const repository=
-
-    new AuthorRepository();
-
+export function useAuthors() {
     return useQuery({
-
-        queryKey:["authors"],
-
-        queryFn:()=>repository.getAll()
-
+        queryKey: ["authors"],
+        // Asegúrate de llamar al método que obtiene los autores desde tu AuthRepository
+        queryFn: () => AuthRepository.prototype.getAuthors(), 
     });
-
 }
