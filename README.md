@@ -653,10 +653,19 @@ The following features were developed using React.js and Next.js and rendered in
 
 - Add Book Management (title, author + whatever metadata you see fit):
 
-
 ![alt text](image-4.png)
 
-![alt text](image-5.png)
+![alt text](image-14.png)
+
+![alt text](image-15.png)
+
+![alt text](image-16.png)
+
+![alt text](image-17.png)
+
+![alt text](image-18.png)
+
+![alt text](image-19.png)
 
 
 - Edit Book Management (title, author + whatever metadata you see fit).
@@ -666,12 +675,23 @@ The following features were developed using React.js and Next.js and rendered in
 ![alt text](image-7.png)
 
 
-
 - Delete Books Management (title, author + whatever metadata you see fit).
 
 ![alt text](image-8.png)
 
 ![alt text](image-9.png)
+
+![alt text](image-20.png)
+
+![alt text](image-21.png)
+
+![alt text](image-22.png)
+
+![alt text](image-23.png)
+
+![alt text](image-24.png)
+
+![alt text](image-25.png)
 
 
 - Check-in/Check-out: Mark books as checked in (borrowed) or checked out (returned).
