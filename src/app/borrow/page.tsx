@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { BorrowRepository } from '@/infrastructure/repositories/BorrowRepository';
 
-// Si tus componentes de CheckIn y CheckOut ya existen en otras rutas, 
-// puedes mover su lógica a componentes o importarlos directamente aquí.
-// Ejemplo: import CheckInForm from '@/components/borrow/CheckInForm';
+// Instanciamos el repositorio
+const borrowRepository = new BorrowRepository();
 
 export default function BorrowPage() {
   const [activeTab, setActiveTab] = useState<'checkout' | 'checkin'>('checkout');
@@ -25,6 +25,7 @@ export default function BorrowPage() {
       <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
         <nav className="-mb-px flex space-x-8" aria-label="Tabs">
           <button
+            type="button"
             onClick={() => setActiveTab('checkout')}
             className={`py-4 px-1 inline-flex items-center gap-2 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
               activeTab === 'checkout'
@@ -36,6 +37,7 @@ export default function BorrowPage() {
           </button>
 
           <button
+            type="button"
             onClick={() => setActiveTab('checkin')}
             className={`py-4 px-1 inline-flex items-center gap-2 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
               activeTab === 'checkin'
@@ -48,7 +50,7 @@ export default function BorrowPage() {
         </nav>
       </div>
 
-      {/* Contenido Dinámico según la Pestaña Seleccionada */}
+      {/* Contenido Dinámico */}
       <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 border border-gray-100 dark:border-gray-700">
         {activeTab === 'checkout' ? (
           <CheckOutSection />
@@ -67,6 +69,7 @@ function CheckOutSection() {
   const [userId, setUserId] = useState('');
   const [bookId, setBookId] = useState('');
   const [dueDate, setDueDate] = useState('');
+  const [borrowerName, setBorrowerName] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -76,17 +79,36 @@ function CheckOutSection() {
     setMessage(null);
 
     try {
-      // Sustituye con el llamado a tu API / backend real
-      // const res = await fetch('/api/borrow/checkout', { method: 'POST', body: JSON.stringify({ userId, bookId, dueDate }) });
+      // 1. Consultar información previa del libro a través de BorrowRepository
+      const borrowData = await borrowRepository.getByBookId(Number(bookId));
       
-      // Simulación de respuesta exitosa:
-      await new Promise((res) => setTimeout(res, 1000));
-      setMessage({ type: 'success', text: '¡Préstamo registrado exitosamente!' });
+      const fetchedBorrowerName = borrowData?.borrowerName || null;
+      setBorrowerName(fetchedBorrowerName);
+
+      // 2. Realizar el Check-out mediante el repositorio
+      await borrowRepository.checkOut({
+        userId: Number(userId),
+        bookId: Number(bookId),
+        dueDate,
+      });
+
+      const successDetail = fetchedBorrowerName 
+        ? `¡Préstamo registrado exitosamente para ${fetchedBorrowerName}!`
+        : '¡Préstamo registrado exitosamente!';
+
+      setMessage({ type: 'success', text: successDetail });
+      
+      // Limpiar formulario
       setUserId('');
       setBookId('');
       setDueDate('');
-    } catch (err) {
-      setMessage({ type: 'error', text: 'Error al procesar el préstamo. Verifica los datos.' });
+      setBorrowerName(null);
+    } catch (err: any) {
+      console.error("Error al procesar préstamo:", err);
+      setMessage({ 
+        type: 'error', 
+        text: `Error al procesar el préstamo (${err.message || 'Error del servidor'}).` 
+      });
     } finally {
       setLoading(false);
     }
@@ -116,25 +138,25 @@ function CheckOutSection() {
             ID del Usuario
           </label>
           <input
-            type="text"
+            type="number"
             required
             value={userId}
             onChange={(e) => setUserId(e.target.value)}
-            placeholder="Ej: USR-1029"
+            placeholder="Ej: 1029"
             className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            ID o Código del Libro
+            ID del Libro
           </label>
           <input
-            type="text"
+            type="number"
             required
             value={bookId}
             onChange={(e) => setBookId(e.target.value)}
-            placeholder="Ej: BOK-5541"
+            placeholder="Ej: 5541"
             className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -152,6 +174,12 @@ function CheckOutSection() {
           />
         </div>
 
+        {borrowerName && (
+          <div className="p-3 bg-blue-50 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 text-xs rounded">
+            Prestatario detectado: <strong>{borrowerName}</strong>
+          </div>
+        )}
+
         <button
           type="submit"
           disabled={loading}
@@ -168,7 +196,8 @@ function CheckOutSection() {
    SECCIÓN DE CHECK-IN (DEVOLUCIÓN DE LIBROS)
    ============================================================================ */
 function CheckInSection() {
-  const [borrowIdOrBookId, setBorrowIdOrBookId] = useState('');
+  const [bookId, setBookId] = useState('');
+  const [borrowId, setBorrowId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -178,15 +207,30 @@ function CheckInSection() {
     setMessage(null);
 
     try {
-      // Sustituye con el llamado a tu API / backend real
-      // const res = await fetch('/api/borrow/checkin', { method: 'POST', body: JSON.stringify({ borrowIdOrBookId }) });
+      // 1. Consultar el préstamo activo mediante bookId
+      const borrowData = await borrowRepository.getByBookId(Number(bookId));
+      const fetchedBorrowId = borrowData.id || borrowData.borrowId;
 
-      // Simulación de respuesta exitosa:
-      await new Promise((res) => setTimeout(res, 1000));
-      setMessage({ type: 'success', text: '¡Devolución registrada e inventario actualizado!' });
-      setBorrowIdOrBookId('');
-    } catch (err) {
-      setMessage({ type: 'error', text: 'Error al procesar la devolución.' });
+      if (!fetchedBorrowId) {
+        throw new Error("El ID de préstamo devuelto por la API no es válido.");
+      }
+
+      setBorrowId(fetchedBorrowId);
+
+      // 2. Realizar el Check-in enviando el borrowId obtenido
+      await borrowRepository.checkIn({ borrowId: Number(fetchedBorrowId) });
+
+      setMessage({
+        type: 'success',
+        text: `¡Devolución del libro #${bookId} (Préstamo #${fetchedBorrowId}) registrada con éxito!`,
+      });
+
+      // Limpiar formulario
+      setBookId('');
+      setBorrowId(null);
+    } catch (err: any) {
+      console.error("Error en devolución:", err);
+      setMessage({ type: 'error', text: err.message || 'Error al procesar la devolución.' });
     } finally {
       setLoading(false);
     }
@@ -213,24 +257,30 @@ function CheckInSection() {
       <form onSubmit={handleCheckIn} className="space-y-4 max-w-md">
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Código de Préstamo o ID del Libro
+            ID del Libro a Devolver
           </label>
           <input
-            type="text"
+            type="number"
             required
-            value={borrowIdOrBookId}
-            onChange={(e) => setBorrowIdOrBookId(e.target.value)}
-            placeholder="Ej: BOK-5541 o ID de Préstamo"
+            value={bookId}
+            onChange={(e) => setBookId(e.target.value)}
+            placeholder="Ej: 5541"
             className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
+
+        {borrowId && (
+          <div className="p-3 bg-blue-50 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 text-xs rounded">
+            Préstamo detectado ID: <strong>#{borrowId}</strong>
+          </div>
+        )}
 
         <button
           type="submit"
           disabled={loading}
           className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md transition-colors disabled:opacity-50"
         >
-          {loading ? 'Procesando...' : 'Registrar Devolución'}
+          {loading ? 'Procesando...' : 'Confirmar Devolución'}
         </button>
       </form>
     </div>
