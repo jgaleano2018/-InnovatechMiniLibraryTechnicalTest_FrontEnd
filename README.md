@@ -700,9 +700,26 @@ The following features were developed using React.js and Next.js and rendered in
 
 ![alt text](image-10.png)
 
+![alt text](image-26.png)
+
+![alt text](image-27.png)
+
+![alt text](image-28.png)
+
+![alt text](image-29.png)
+
+![alt text](image-30.png)
+
+
 * Ckeck-out:
 
 ![alt text](image-11.png)
+
+![alt text](image-31.png)
+
+![alt text](image-32.png)
+
+![alt text](image-33.png)
 
 
 -  Search: Find books by title, author, or other fields. 

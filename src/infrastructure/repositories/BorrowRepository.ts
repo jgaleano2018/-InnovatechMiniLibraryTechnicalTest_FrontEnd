@@ -35,4 +35,22 @@ export class BorrowRepository
             );
         });
     }
+
+     async checkInSave(request: CheckInRequest): Promise<void> {
+        return this.execute(async () => {
+            await httpClient.post(
+                API.BORROW_CHECKIN_SAVE,
+                request
+            );
+        });
+    }
+
+    async checkOutSave(request: CheckOutRequest): Promise<void> {
+        return this.execute(async () => {
+            await httpClient.post(
+                API.BORROW_CHECKOUT_SAVE,
+                request
+            );
+        });
+    }
 }

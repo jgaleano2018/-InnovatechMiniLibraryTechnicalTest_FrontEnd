@@ -86,10 +86,9 @@ function CheckOutSection() {
       setBorrowerName(fetchedBorrowerName);
 
       // 2. Realizar el Check-out mediante el repositorio
-      await borrowRepository.checkOut({
-        userId: Number(userId),
-        bookId: Number(bookId),
-        dueDate,
+      await borrowRepository.checkOutSave({
+        borrowerName: borrowerName || 'Desconocido',
+        bookId: Number(bookId)
       });
 
       const successDetail = fetchedBorrowerName 
@@ -209,7 +208,10 @@ function CheckInSection() {
     try {
       // 1. Consultar el préstamo activo mediante bookId
       const borrowData = await borrowRepository.getByBookId(Number(bookId));
-      const fetchedBorrowId = borrowData.id || borrowData.borrowId;
+      const fetchedBorrowId = borrowData.id || borrowData[0]?.borrowId;
+
+      console.log("Borrow data fetched:", borrowData);
+      console.log("Fetched borrowId:", fetchedBorrowId);
 
       if (!fetchedBorrowId) {
         throw new Error("El ID de préstamo devuelto por la API no es válido.");
@@ -218,7 +220,7 @@ function CheckInSection() {
       setBorrowId(fetchedBorrowId);
 
       // 2. Realizar el Check-in enviando el borrowId obtenido
-      await borrowRepository.checkIn({ borrowId: Number(fetchedBorrowId) });
+      await borrowRepository.checkInSave({ borrowId: Number(fetchedBorrowId) });
 
       setMessage({
         type: 'success',
